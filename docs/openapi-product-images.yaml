@@ -1,0 +1,345 @@
+openapi: 3.1.0
+info:
+  title: 商品圖片（Product Image）CRUD 與商品巢狀端點 API
+  version: '1.0.0'
+  description: |
+    商品圖片 CRUD 與商品下圖片管理的 OpenAPI 規格。路徑皆以 /api 為前綴。
+servers:
+  - url: http://localhost
+    description: Local
+paths:
+  /api/product-images:
+    get:
+      summary: 取得商品圖片列表（分頁）
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1 }
+        - in: query
+          name: per_page
+          schema: { type: integer, minimum: 1, maximum: 100 }
+        - in: query
+          name: product_id
+          schema: { type: integer, minimum: 1 }
+        - in: query
+          name: is_active
+          schema: { type: boolean }
+        - in: query
+          name: sort
+          description: 可用欄位：id, product_id, sort_order, created_at, updated_at；前綴 - 表示降冪
+          schema: { type: string }
+      responses:
+        '200':
+          description: 分頁列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProductImageCollection'
+    post:
+      summary: 建立商品圖片
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductImageCreatePayload'
+      responses:
+        '201':
+          description: 建立成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductImageResource'
+        '422':
+          description: 驗證錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+  /api/product-images/{id}:
+    get:
+      summary: 取得單一商品圖片
+      parameters:
+        - $ref: '#/components/parameters/ProductImageId'
+      responses:
+        '200':
+          description: 單筆資料
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductImageResource'
+        '404':
+          description: 找不到
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+    put:
+      summary: 更新商品圖片（整筆）
+      parameters:
+        - $ref: '#/components/parameters/ProductImageId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductImageUpdatePayload'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductImageResource'
+        '422':
+          description: 驗證錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          description: 找不到
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+    patch:
+      summary: 局部更新商品圖片
+      parameters:
+        - $ref: '#/components/parameters/ProductImageId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductImageUpdatePayload'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductImageResource'
+        '422':
+          description: 驗證錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          description: 找不到
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+    delete:
+      summary: 刪除商品圖片
+      parameters:
+        - $ref: '#/components/parameters/ProductImageId'
+      responses:
+        '204': { description: 刪除成功（無內容） }
+        '404':
+          description: 找不到
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+  /api/product-images/{id}/make-primary:
+    put:
+      summary: 設為主圖
+      parameters:
+        - $ref: '#/components/parameters/ProductImageId'
+      responses:
+        '200':
+          description: 設定成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductImageResource'
+        '404':
+          description: 找不到
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+  /api/products/{product}/images:
+    get:
+      summary: 列出某商品的圖片（分頁）
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1 }
+        - in: query
+          name: per_page
+          schema: { type: integer, minimum: 1, maximum: 100 }
+        - in: query
+          name: is_active
+          schema: { type: boolean }
+        - in: query
+          name: sort
+          description: 可用欄位：id, sort_order, created_at；前綴 - 表示降冪
+          schema: { type: string }
+      responses:
+        '200':
+          description: 分頁圖片列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProductImageCollection'
+        '404':
+          description: 商品不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+    post:
+      summary: 在某商品下新增圖片
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductImageCreateUnderProductPayload'
+      responses:
+        '201':
+          description: 建立成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductImageResource'
+        '422':
+          description: 驗證錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          description: 商品不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+  /api/products/{product}/images/sort:
+    patch:
+      summary: 批次更新圖片排序
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id: { type: integer }
+                      sort_order: { type: integer }
+                    required: [id, sort_order]
+              required: [items]
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProductImageCollection'
+        '404':
+          description: 商品不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+components:
+  parameters:
+    ProductImageId:
+      in: path
+      name: id
+      required: true
+      schema: { type: integer, minimum: 1 }
+    ProductId:
+      in: path
+      name: product
+      required: true
+      schema: { type: integer, minimum: 1 }
+  schemas:
+    ProductImage:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        product_id: { type: integer, example: 10 }
+        url: { type: string, example: 'https://cdn.example.com/images/p10-1.jpg', maxLength: 2048 }
+        alt: { type: ["string", "null"], example: 'iPhone 42 正面照', maxLength: 255 }
+        is_primary: { type: boolean, example: true }
+        sort_order: { type: integer, example: 0 }
+        is_active: { type: boolean, example: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+      required: [id, product_id, url, is_primary, sort_order, is_active, created_at, updated_at]
+    ProductImageResource:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/ProductImage'
+      required: [data]
+    ProductImageCreatePayload:
+      type: object
+      properties:
+        product_id: { type: integer }
+        url: { type: string, maxLength: 2048 }
+        alt: { type: string, nullable: true, maxLength: 255 }
+        is_primary: { type: boolean }
+        sort_order: { type: integer, minimum: 0 }
+        is_active: { type: boolean }
+      required: [product_id, url]
+    ProductImageCreateUnderProductPayload:
+      type: object
+      properties:
+        url: { type: string, maxLength: 2048 }
+        alt: { type: string, nullable: true, maxLength: 255 }
+        is_primary: { type: boolean }
+        sort_order: { type: integer, minimum: 0 }
+        is_active: { type: boolean }
+      required: [url]
+    ProductImageUpdatePayload:
+      type: object
+      properties:
+        product_id: { type: integer }
+        url: { type: string, maxLength: 2048 }
+        alt: { type: string, nullable: true, maxLength: 255 }
+        is_primary: { type: boolean }
+        sort_order: { type: integer, minimum: 0 }
+        is_active: { type: boolean }
+    PaginatedProductImageCollection:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductImage'
+        links:
+          type: object
+        meta:
+          type: object
+      required: [data, links, meta]
+    ValidationError:
+      type: object
+      properties:
+        message: { type: string, example: 'The url field is required.' }
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+      required: [message, errors]
+    NotFound:
+      type: object
+      properties:
+        message: { type: string, example: 'Resource not found.' }
+      required: [message]

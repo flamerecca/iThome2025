@@ -1,0 +1,378 @@
+openapi: 3.1.0
+info:
+  title: 商品標籤（Tag）與商品關聯 API（多對多）
+  version: '1.0.0'
+  description: |
+    商品標籤 CRUD API 的 OpenAPI 規格。路徑皆以 /api 為前綴。
+servers:
+  - url: http://localhost
+    description: Local
+paths:
+  /api/tags:
+    # Tags collection
+    get:
+      summary: 取得標籤列表（分頁）
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1 }
+        - in: query
+          name: per_page
+          schema: { type: integer, minimum: 1, maximum: 100 }
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: sort
+          description: 可用欄位：id, name, created_at, updated_at；前綴 - 表示降冪
+          schema: { type: string }
+        - in: query
+          name: is_active
+          schema: { type: boolean }
+      responses:
+        '200':
+          description: 分頁列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTagCollection'
+    post:
+      summary: 建立標籤
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagCreatePayload'
+      responses:
+        '201':
+          description: 建立成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagResource'
+        '422':
+          description: 驗證錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+  /api/tags/{id}:
+    get:
+      summary: 取得單一標籤
+      parameters:
+        - $ref: '#/components/parameters/TagId'
+      responses:
+        '200':
+          description: 單筆資料
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagResource'
+        '404':
+          description: 找不到
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+    put:
+      summary: 更新標籤（整筆）
+      parameters:
+        - $ref: '#/components/parameters/TagId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagUpdatePayload'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagResource'
+        '422':
+          description: 驗證錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          description: 找不到
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+    patch:
+      summary: 局部更新標籤
+      parameters:
+        - $ref: '#/components/parameters/TagId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagUpdatePayload'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagResource'
+        '422':
+          description: 驗證錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          description: 找不到
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+    delete:
+      summary: 刪除標籤
+      parameters:
+        - $ref: '#/components/parameters/TagId'
+      responses:
+        '204': { description: 刪除成功無內容 }
+        '404':
+          description: 找不到
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+  /api/tags/{tag}/products:
+    get:
+      summary: 列出使用某標籤的商品
+      parameters:
+        - $ref: '#/components/parameters/TagParam'
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1 }
+        - in: query
+          name: per_page
+          schema: { type: integer, minimum: 1, maximum: 100 }
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: sort
+          description: 可用欄位：id, name, price, created_at；前綴 - 表示降冪
+          schema: { type: string }
+      responses:
+        '200':
+          description: 分頁列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProductCollection'
+  /api/products/{product}/tags:
+    get:
+      summary: 列出某商品的標籤
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1 }
+        - in: query
+          name: per_page
+          schema: { type: integer, minimum: 1, maximum: 100 }
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: sort
+          description: 可用欄位：id, name, created_at, updated_at；前綴 - 表示降冪
+          schema: { type: string }
+        - in: query
+          name: is_active
+          schema: { type: boolean }
+      responses:
+        '200':
+          description: 分頁列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTagCollection'
+    put:
+      summary: 同步某商品的標籤集合（覆寫）
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tag_ids:
+                  type: array
+                  items: { type: integer }
+              required: [ tag_ids ]
+      responses:
+        '200':
+          description: 同步後的標籤清單
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Tag'
+                required: [ data ]
+  /api/products/{product}/tags/{tag}:
+    post:
+      summary: 附加單一標籤到商品
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+        - $ref: '#/components/parameters/TagParam'
+      responses:
+        '204': { description: 已附加或本來就已存在，皆回 204 }
+    delete:
+      summary: 自商品移除單一標籤
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+        - $ref: '#/components/parameters/TagParam'
+      responses:
+        '204': { description: 已移除或原本不存在，皆回 204 }
+        '404':
+          description: 找不到
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+components:
+  parameters:
+    TagId:
+      in: path
+      name: id
+      required: true
+      schema: { type: integer, minimum: 1 }
+    ProductId:
+      in: path
+      name: product
+      required: true
+      schema: { type: integer, minimum: 1 }
+    TagParam:
+      in: path
+      name: tag
+      required: true
+      schema: { type: integer, minimum: 1 }
+  schemas:
+    Tag:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: '限時優惠' }
+        slug: { type: string, example: 'xian-shi-you-hui' }
+        description: { type: [ 'string', 'null' ], example: '限時活動使用' }
+        is_active: { type: boolean, example: true }
+        created_at: { type: string, format: date-time, example: '2025-09-06T09:30:00Z' }
+        updated_at: { type: string, format: date-time, example: '2025-09-06T09:30:00Z' }
+      required: [ id, name, slug, is_active, created_at, updated_at ]
+    TagResource:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Tag'
+      required: [ data ]
+    PaginatedTagCollection:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+        links:
+          type: object
+          properties:
+            first: { type: [ 'string', 'null' ] }
+            last: { type: [ 'string', 'null' ] }
+            prev: { type: [ 'string', 'null' ] }
+            next: { type: [ 'string', 'null' ] }
+        meta:
+          type: object
+          properties:
+            current_page: { type: integer }
+            from: { type: [ 'integer', 'null' ] }
+            last_page: { type: integer }
+            links: { type: array, items: { type: object } }
+            path: { type: string }
+            per_page: { type: integer }
+            to: { type: [ 'integer', 'null' ] }
+            total: { type: integer }
+      required: [ data, links, meta ]
+    Product:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        description: { type: [ 'string', 'null' ] }
+        price: { type: number, format: float }
+        stock: { type: integer }
+        is_active: { type: boolean }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+      required: [ id, name, price, stock, is_active, created_at, updated_at ]
+    PaginatedProductCollection:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        links:
+          type: object
+          properties:
+            first: { type: [ 'string', 'null' ] }
+            last: { type: [ 'string', 'null' ] }
+            prev: { type: [ 'string', 'null' ] }
+            next: { type: [ 'string', 'null' ] }
+        meta:
+          type: object
+          properties:
+            current_page: { type: integer }
+            from: { type: [ 'integer', 'null' ] }
+            last_page: { type: integer }
+            links: { type: array, items: { type: object } }
+            path: { type: string }
+            per_page: { type: integer }
+            to: { type: [ 'integer', 'null' ] }
+            total: { type: integer }
+      required: [ data, links, meta ]
+    TagCreatePayload:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 50 }
+        slug: { type: string, minLength: 1, maxLength: 50, nullable: true }
+        description: { type: string, maxLength: 255, nullable: true }
+        is_active: { type: boolean, default: true }
+      required: [ name ]
+    TagUpdatePayload:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 50 }
+        slug: { type: string, minLength: 1, maxLength: 50, nullable: true }
+        description: { type: string, maxLength: 255, nullable: true }
+        is_active: { type: boolean }
+    ValidationError:
+      type: object
+      properties:
+        message: { type: string, example: 'The name field is required.' }
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+      required: [ message, errors ]
+    NotFound:
+      type: object
+      properties:
+        message: { type: string, example: 'Resource not found.' }
+      required: [ message ]

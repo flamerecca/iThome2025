@@ -1,0 +1,272 @@
+openapi: 3.1.0
+info:
+  title: 商品類別（Category）CRUD 與依類別選取商品 API
+  version: '1.0.0'
+  description: |
+    商品類別 CRUD 與依類別列出商品的 OpenAPI 規格。路徑皆以 /api 為前綴。
+servers:
+  - url: http://localhost
+    description: Local
+paths:
+  /api/categories:
+    get:
+      summary: 取得類別列表（分頁）
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1 }
+        - in: query
+          name: per_page
+          schema: { type: integer, minimum: 1, maximum: 100 }
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: sort
+          description: 可用欄位：id, name, created_at, updated_at；前綴 - 表示降冪
+          schema: { type: string }
+        - in: query
+          name: is_active
+          schema: { type: boolean }
+      responses:
+        '200':
+          description: 分頁列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCategoryCollection'
+    post:
+      summary: 建立類別
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryCreatePayload'
+      responses:
+        '201':
+          description: 建立成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResource'
+        '422':
+          description: 驗證錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+  /api/categories/{id}:
+    get:
+      summary: 取得單一類別
+      parameters:
+        - $ref: '#/components/parameters/CategoryId'
+      responses:
+        '200':
+          description: 單筆資料
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResource'
+        '404':
+          description: 找不到
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+    put:
+      summary: 更新類別（整筆）
+      parameters:
+        - $ref: '#/components/parameters/CategoryId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryUpdatePayload'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResource'
+        '422':
+          description: 驗證錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          description: 找不到
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+    patch:
+      summary: 局部更新類別
+      parameters:
+        - $ref: '#/components/parameters/CategoryId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryUpdatePayload'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResource'
+        '422':
+          description: 驗證錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          description: 找不到
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+    delete:
+      summary: 刪除類別
+      parameters:
+        - $ref: '#/components/parameters/CategoryId'
+      responses:
+        '204': { description: 刪除成功（無內容） }
+        '404':
+          description: 找不到
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+  /api/categories/{id}/products:
+    get:
+      summary: 依類別列出商品（分頁）
+      parameters:
+        - $ref: '#/components/parameters/CategoryId'
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1 }
+        - in: query
+          name: per_page
+          schema: { type: integer, minimum: 1, maximum: 100 }
+        - in: query
+          name: search
+          description: 依商品名稱模糊查詢
+          schema: { type: string }
+        - in: query
+          name: sort
+          description: 可用欄位：id, name, price, created_at；前綴 - 表示降冪
+          schema: { type: string }
+        - in: query
+          name: is_active
+          schema: { type: boolean }
+      responses:
+        '200':
+          description: 分頁商品列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProductCollection'
+        '404':
+          description: 類別不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+components:
+  parameters:
+    CategoryId:
+      in: path
+      name: id
+      required: true
+      schema: { type: integer, minimum: 1 }
+  schemas:
+    Category:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: '手機' }
+        slug: { type: ["string", "null"], example: 'shou-ji' }
+        description: { type: ["string", "null"], example: '智慧型手機' }
+        is_active: { type: boolean, example: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+      required: [id, name, is_active, created_at, updated_at]
+    CategoryResource:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Category'
+      required: [data]
+    CategoryCreatePayload:
+      type: object
+      properties:
+        name: { type: string, maxLength: 50 }
+        slug: { type: string, nullable: true, maxLength: 50 }
+        description: { type: string, nullable: true, maxLength: 255 }
+        is_active: { type: boolean }
+      required: [name]
+    CategoryUpdatePayload:
+      type: object
+      properties:
+        name: { type: string, maxLength: 50 }
+        slug: { type: string, nullable: true, maxLength: 50 }
+        description: { type: string, nullable: true, maxLength: 255 }
+        is_active: { type: boolean }
+    PaginatedCategoryCollection:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+        links:
+          type: object
+        meta:
+          type: object
+      required: [data, links, meta]
+    Product:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: 'iPhone 42' }
+        description: { type: ["string", "null"], example: 'The future phone' }
+        price: { type: number, format: float, example: 1999.99, minimum: 0 }
+        stock: { type: integer, example: 5, minimum: 0 }
+        is_active: { type: boolean, example: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+      required: [id, name, price, stock, is_active, created_at, updated_at]
+    PaginatedProductCollection:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        links:
+          type: object
+        meta:
+          type: object
+      required: [data, links, meta]
+    ValidationError:
+      type: object
+      properties:
+        message: { type: string, example: 'The name field is required.' }
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+      required: [message, errors]
+    NotFound:
+      type: object
+      properties:
+        message: { type: string, example: 'Resource not found.' }
+      required: [message]

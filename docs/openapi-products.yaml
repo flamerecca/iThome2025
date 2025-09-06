@@ -1,0 +1,206 @@
+openapi: 3.1.0
+info:
+  title: 商品（Product）CRUD API
+  version: '1.0.0'
+  description: |
+    商品 CRUD API 的 OpenAPI 規格。路徑皆以 /api 為前綴。
+servers:
+  - url: http://localhost
+    description: Local
+paths:
+  /api/products:
+    get:
+      summary: 取得商品列表（分頁）
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1 }
+        - in: query
+          name: per_page
+          schema: { type: integer, minimum: 1, maximum: 100 }
+      responses:
+        '200':
+          description: 分頁列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProductCollection'
+    post:
+      summary: 建立商品
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductCreatePayload'
+      responses:
+        '201':
+          description: 建立成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResource'
+        '422':
+          description: 驗證錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+  /api/products/{id}:
+    get:
+      summary: 取得單一商品
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      responses:
+        '200':
+          description: 單筆資料
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResource'
+        '404':
+          description: 找不到
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+    put:
+      summary: 更新商品（整筆）
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductUpdatePayload'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResource'
+        '422':
+          description: 驗證錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          description: 找不到
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+    patch:
+      summary: 局部更新商品
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductUpdatePayload'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResource'
+        '422':
+          description: 驗證錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          description: 找不到
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+    delete:
+      summary: 刪除商品
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      responses:
+        '204': { description: 刪除成功（無內容） }
+        '404':
+          description: 找不到
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+components:
+  parameters:
+    ProductId:
+      in: path
+      name: id
+      required: true
+      schema: { type: integer, minimum: 1 }
+  schemas:
+    Product:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: 'iPhone 42' }
+        description: { type: ["string", "null"], example: 'The future phone' }
+        price: { type: number, format: float, example: 1999.99, minimum: 0 }
+        stock: { type: integer, example: 5, minimum: 0 }
+        is_active: { type: boolean, example: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+      required: [id, name, price, stock, is_active, created_at, updated_at]
+    ProductResource:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Product'
+      required: [data]
+    ProductCreatePayload:
+      type: object
+      properties:
+        name: { type: string, maxLength: 255 }
+        description: { type: string, nullable: true }
+        price: { type: number, format: float, minimum: 0 }
+        stock: { type: integer, minimum: 0 }
+        is_active: { type: boolean }
+      required: [name, price]
+    ProductUpdatePayload:
+      type: object
+      properties:
+        name: { type: string, maxLength: 255 }
+        description: { type: string, nullable: true }
+        price: { type: number, format: float, minimum: 0 }
+        stock: { type: integer, minimum: 0 }
+        is_active: { type: boolean }
+    PaginatedProductCollection:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        links:
+          type: object
+        meta:
+          type: object
+      required: [data, links, meta]
+    ValidationError:
+      type: object
+      properties:
+        message: { type: string, example: 'The name field is required.' }
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+      required: [message, errors]
+    NotFound:
+      type: object
+      properties:
+        message: { type: string, example: 'Resource not found.' }
+      required: [message]
