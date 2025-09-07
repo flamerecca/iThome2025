@@ -11,6 +11,9 @@ Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
+// Demo route for the Livewire counter component
+Route::view('counter', 'counter-demo')->name('counter');
+
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
