@@ -3,7 +3,9 @@
 namespace App\Filament\Resources\Products\Schemas;
 
 use App\Models\Category;
+use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\SpatieTagsInput;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
@@ -18,8 +20,15 @@ class ProductForm
             ->components([
                 TextInput::make('name')
                     ->required(),
-                Textarea::make('description')
+                RichEditor::make('description')
+                    ->toolbarButtons([
+                        'bold', 'italic', 'underline', 'strike', 'subscript', 'superscript', 'link'
+                    ])
+                    ->extraInputAttributes([
+                        'style' => 'min-height: 300px;'
+                    ])
                     ->columnSpanFull(),
+                SpatieTagsInput::make('tags'),
                 TextInput::make('price')
                     ->required()
                     ->numeric()
