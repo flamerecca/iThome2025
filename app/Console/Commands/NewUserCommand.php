@@ -32,7 +32,7 @@ class NewUserCommand extends Command
         $user = User::factory()->create([
             'password' => Hash::make($password)
         ]);
-        $this->info('name: ' . $user->name);
+        $this->info('email: ' . $user->email);
         $this->info('password: ' . $password);
     }
 }
