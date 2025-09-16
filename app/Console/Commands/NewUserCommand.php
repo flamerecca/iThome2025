@@ -4,6 +4,8 @@ namespace App\Console\Commands;
 
 use App\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class NewUserCommand extends Command
 {
@@ -26,6 +28,11 @@ class NewUserCommand extends Command
      */
     public function handle()
     {
-        User::factory()->create();
+        $password = Str::random(10);
+        $user = User::factory()->create([
+            'password' => Hash::make($password)
+        ]);
+        $this->info('name: ' . $user->name);
+        $this->info('password: ' . $password);
     }
 }
