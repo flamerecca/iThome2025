@@ -7,13 +7,14 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "fakerphp/faker": "^1.23",
         "filament/filament": "^4.0",
         "filament/spatie-laravel-tags-plugin": "^4.0",
         "laravel/framework": "^12.0",
+        "laravel/pennant": "^1.18",
         "laravel/tinker": "^2.10.1",
         "livewire/flux": "^2.1.1",
         "livewire/volt": "^1.7.0",
-        "fakerphp/faker": "^1.23",
         "spatie/laravel-permission": "^6.21"
     },
     "require-dev": {

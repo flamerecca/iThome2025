@@ -1,5 +1,6 @@
 <?php
 
+use App\Features\NewApi;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductImageController;
@@ -26,3 +27,13 @@ Route::get('products/{product}/images', [ProductImageController::class, 'indexBy
 Route::post('products/{product}/images', [ProductImageController::class, 'storeUnderProduct']);
 Route::put('product-images/{id}/make-primary', [ProductImageController::class, 'makePrimary']);
 Route::patch('products/{product}/images/sort', [ProductImageController::class, 'batchSort']);
+
+if (Feature::active(NewApi::class)) {
+    Route::get('/legacy', function () {
+        return 'new api';
+    });
+} else {
+    Route::get('/legacy', function () {
+        return 'old api';
+    });
+}
