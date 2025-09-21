@@ -28,12 +28,12 @@ Route::post('products/{product}/images', [ProductImageController::class, 'storeU
 Route::put('product-images/{id}/make-primary', [ProductImageController::class, 'makePrimary']);
 Route::patch('products/{product}/images/sort', [ProductImageController::class, 'batchSort']);
 
-if (Feature::active(NewApi::class)) {
-    Route::get('/legacy', function () {
-        return 'new api';
-    });
-} else {
-    Route::get('/legacy', function () {
-        return 'old api';
-    });
-}
+//if (Feature::active(NewApi::class)) {
+//    Route::get('/legacy', function () {
+//        return 'new api';
+//    });
+//} else {
+//    Route::get('/legacy', function () {
+//        return 'old api';
+//    });
+//}
